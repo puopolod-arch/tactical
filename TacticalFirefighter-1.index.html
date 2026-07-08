@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Tactical FF"/>
+<meta name="theme-color" content="#1C1C1E"/>
+<title>Tactical Firefighter</title>
+<style>
+:root{--orange:#E8640C;--charcoal:#1C1C1E;--steel:#3A3A3C;--amber:#FFBA7B;--bg:#111113;--surface2:#2C2C2E;--text:#F2F2F7;--muted:#8E8E93;--green:#30D158;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:15px;min-height:100vh;padding-bottom:env(safe-area-inset-bottom);}
+.app-header{background:var(--charcoal);border-bottom:3px solid var(--orange);padding:14px 16px 12px;position:sticky;top:0;z-index:100;}
+.app-header h1{font-size:17px;font-weight:800;letter-spacing:0.08em;color:var(--text);}
+.app-header p{font-size:11px;color:var(--amber);margin-top:2px;}
+.save-badge{display:inline-block;font-size:10px;color:var(--green);margin-top:3px;}
+.tabs{display:flex;background:var(--charcoal);padding:0 12px 12px;gap:8px;overflow-x:auto;}
+.tab{flex-shrink:0;padding:7px 14px;border-radius:8px;font-size:11px;font-weight:700;letter-spacing:0.06em;border:none;cursor:pointer;transition:background 0.15s,color 0.15s;}
+.tab.active{background:var(--orange);color:white;}
+.tab.inactive{background:var(--steel);color:var(--muted);}
+.sections{padding:12px 12px 24px;}
+.section{margin-bottom:10px;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);}
+.section-header{background:var(--charcoal);border-left:4px solid var(--orange);padding:12px 14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;user-select:none;}
+.section-label{font-size:13px;font-weight:700;color:var(--text);letter-spacing:0.04em;}
+.section-tag{font-size:10px;color:var(--amber);margin-top:2px;}
+.section-arrow{font-size:12px;color:var(--muted);margin-left:8px;transition:transform 0.2s;}
+.section-arrow.open{transform:rotate(180deg);}
+.section-body{padding:12px;}
+.how-block{background:rgba(232,100,12,0.1);border-left:3px solid var(--orange);border-radius:6px;padding:10px 12px;margin-bottom:12px;font-size:11px;line-height:1.5;color:var(--amber);}
+.how-block strong{color:white;}
+.cd-header{background:rgba(48,209,88,0.08);border-left:3px solid var(--green);border-radius:6px;padding:8px 12px;margin:14px 0 8px;}
+.cd-label{font-size:11px;font-weight:700;color:var(--green);letter-spacing:0.06em;}
+.cd-tag{font-size:10px;color:var(--muted);margin-top:2px;}
+.ex-table{width:100%;border-collapse:collapse;}
+.ex-table th{background:var(--steel);color:white;font-size:10px;font-weight:700;letter-spacing:0.06em;padding:7px 8px;text-align:left;border-bottom:2px solid var(--orange);}
+.cd-table th{background:rgba(48,209,88,0.15);color:var(--green);font-size:10px;font-weight:700;letter-spacing:0.06em;padding:7px 8px;text-align:left;border-bottom:2px solid var(--green);}
+.ex-table td,.cd-table td{padding:9px 8px;font-size:12px;vertical-align:top;border-bottom:1px solid rgba(255,255,255,0.06);}
+.ex-table tr:last-child td,.cd-table tr:last-child td{border-bottom:none;}
+.ex-table tr:nth-child(even) td{background:rgba(255,255,255,0.025);}
+.cd-table tr:nth-child(even) td{background:rgba(48,209,88,0.03);}
+.ex-name{color:var(--text);font-weight:600;font-size:12px;}
+.ex-sets{color:var(--amber);}
+.ex-load{color:var(--orange);font-weight:600;}
+.ex-cue,.cd-cue{color:var(--muted);font-size:11px;line-height:1.4;}
+.cd-hold{color:var(--green);font-weight:600;white-space:nowrap;}
+.editable{cursor:pointer;border-bottom:1px dashed rgba(232,100,12,0.4);padding-bottom:1px;display:inline-block;min-width:40px;}
+input.edit-input{background:rgba(232,100,12,0.15);border:1px solid var(--orange);border-radius:4px;color:white;font-size:12px;padding:3px 6px;width:100%;outline:none;font-family:inherit;}
+@media(max-width:480px){.col-cue{display:none;}}
+.info-banner{background:rgba(232,100,12,0.1);border:1px solid rgba(232,100,12,0.3);border-radius:10px;padding:12px 14px;margin-bottom:10px;font-size:12px;line-height:1.6;color:var(--amber);}
+.info-banner strong{color:white;display:block;margin-bottom:4px;font-size:13px;}
+.install-banner{background:var(--surface2);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px;margin-bottom:14px;}
+.install-banner h3{font-size:13px;font-weight:700;color:white;margin-bottom:6px;}
+.install-banner p{font-size:11px;color:var(--muted);line-height:1.5;}
+.install-steps{margin-top:8px;}
+.install-steps li{font-size:11px;color:var(--muted);margin:3px 0 3px 16px;}
+.install-steps li span{color:var(--amber);}
+.footer{text-align:center;padding:20px 16px;font-size:10px;color:var(--muted);}
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:var(--green);color:#000;font-size:12px;font-weight:700;padding:8px 20px;border-radius:20px;opacity:0;transition:opacity 0.3s;pointer-events:none;z-index:999;}
+.toast.show{opacity:1;}
+
+.week-tracker{background:var(--charcoal);border-bottom:1px solid rgba(255,255,255,0.08);padding:12px 16px;}
+.week-tracker-title{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.08em;margin-bottom:10px;}
+.weeks-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;}
+.week-cell{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;}
+.week-circle{width:36px;height:36px;border-radius:50%;border:2px solid var(--steel);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--muted);transition:all 0.2s;background:transparent;}
+.week-circle.done{background:var(--green);border-color:var(--green);color:#000;}
+.week-circle.current{border-color:var(--orange);color:var(--orange);}
+.week-num{font-size:9px;color:var(--muted);letter-spacing:0.04em;}
+
+.targets-panel{background:var(--surface2);border-radius:12px;margin:0 12px 10px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);}
+.targets-header{background:var(--charcoal);border-left:4px solid var(--amber);padding:12px 14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;}
+.targets-title{font-size:13px;font-weight:700;color:var(--text);letter-spacing:0.04em;}
+.targets-sub{font-size:10px;color:var(--amber);margin-top:2px;}
+.targets-body{padding:12px;}
+.week-select-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.wk-btn{padding:5px 10px;border-radius:6px;font-size:11px;font-weight:700;border:none;cursor:pointer;transition:all 0.15s;}
+.wk-btn.active{background:var(--orange);color:white;}
+.wk-btn.done-wk{background:var(--green);color:#000;}
+.wk-btn.inactive{background:var(--steel);color:var(--muted);}
+.target-category{margin-bottom:10px;}
+.target-cat-label{font-size:10px;font-weight:700;color:var(--orange);letter-spacing:0.08em;margin-bottom:5px;}
+.target-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05);}
+.target-row:last-child{border-bottom:none;}
+.target-name{font-size:12px;color:var(--text);font-weight:500;}
+.target-val{font-size:12px;color:var(--amber);font-weight:700;text-align:right;}
+.target-note{font-size:10px;color:var(--muted);margin-top:1px;}
+.target-week-label{font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;}
+.target-week-note{font-size:11px;color:var(--muted);font-style:italic;margin-bottom:10px;line-height:1.4;}
+</style>
+</head>
+<body>
+<div class="app-header">
+  <h1>TACTICAL FIREFIGHTER</h1>
+  <p>Tap any orange or amber value to edit</p>
+  <span class="save-badge" id="saveBadge"></span>
+</div>
+
+<div class="week-tracker">
+  <div class="week-tracker-title">8-WEEK PROGRESS</div>
+  <div class="weeks-grid" id="weeksGrid"></div>
+</div>
+
+<div class="targets-panel">
+  <div class="targets-header" onclick="toggleTargets()">
+    <div>
+      <div class="targets-title">&#127919; WEEKLY LOAD TARGETS</div>
+      <div class="targets-sub">Tap to see week-by-week targets for your age and level</div>
+    </div>
+    <span class="section-arrow" id="targetsArrow">&#9660;</span>
+  </div>
+  <div id="targetsPanel" style="display:none;padding:12px;"></div>
+</div>
+<div class="tabs" id="tabBar"></div>
+<div id="appContent"></div>
+<div class="toast" id="toast">Saved</div>
+<script>
+const DEFAULTS = {
+  onShift: {
+    label: "ON-SHIFT EMOM", tag: "10 min \u2022 Every minute on the minute \u2022 10 rounds",
+    how: "Complete all 3 exercises back to back, rest remainder of the minute. Repeat 10 rounds. Total time: exactly 10 minutes.",
+    exercises: [
+      { id:"os1", name:"Dead-Stop Goblet Press", sets:"10 rounds \u00d7 5 reps", load:"35 lb KB", cue:"Full dead stop at chest each rep \u2014 upper back engaged" },
+      { id:"os2", name:"Reverse Lunges", sets:"10 rounds \u00d7 4/side", load:"25 lb DBs", cue:"Step back, control descent \u2014 easier on knees than forward lunge" },
+      { id:"os3", name:"KB Uppercuts", sets:"10 rounds \u00d7 5/side", load:"35 lb KB", cue:"Drive from the hip \u2014 rotational power through core and shoulder" }
+    ],
+    cooldown: {
+      label: "COOL-DOWN \u2014 POST EMOM", tag: "~8 min \u2022 Shift permitting",
+      exercises: [
+        { name:"Chest & Shoulder Stretch", hold:"45 sec/side", cue:"Arm at 90\u00b0 in doorframe, lean forward \u2014 breathe into the stretch" },
+        { name:"Thoracic Extension over Chair", hold:"60 sec", cue:"Arms crossed, lean back over chair back \u2014 open the thoracic spine" },
+        { name:"Standing Hip Flexor Stretch", hold:"45 sec/side", cue:"Lunge position, tuck pelvis, squeeze rear glute \u2014 feel the front of the hip" },
+        { name:"Standing Quad Stretch", hold:"30 sec/side", cue:"Hold ankle behind you, stand tall \u2014 balance on one foot" },
+        { name:"Cross-Body Shoulder Stretch", hold:"30 sec/side", cue:"Pull arm across chest, keep shoulder down" },
+        { name:"Neck Side Bend", hold:"20 sec/side", cue:"Ear to shoulder, relax \u2014 gravity only, no pulling" }
+      ]
+    }
+  },
+  recovery: {
+    label: "POST-SHIFT RECOVERY", tag: "~20 min \u2022 Complete immediately after any 24-hour shift",
+    how: "Straight sets \u2014 complete all sets of one exercise before moving on. Rest as needed. Recovery pace, not conditioning. No rushing.",
+    exercises: [
+      { id:"r1",  name:"KB Halos",                       sets:"10+10",       load:"15 lb KB", cue:"Slow full circle CW then CCW" },
+      { id:"r2",  name:"Two-Handed KB Pullovers",         sets:"2 \u00d7 10",      load:"15 lb KB", cue:"Keep ribs pressed down" },
+      { id:"r3",  name:"Single-Leg KB RDL",               sets:"2 \u00d7 8/leg",   load:"25 lb KB", cue:"Hip hinge only \u2014 slow descent" },
+      { id:"r4",  name:"Sledgehammer 360s",               sets:"2 \u00d7 10 ea",   load:"Sledge",   cue:"Hold near base \u2014 let head swing CW then CCW" },
+      { id:"r5",  name:"Sledgehammer Overhead Hold/Walk", sets:"2 \u00d7 20 sec",  load:"Sledge",   cue:"Hold vertical overhead \u2014 walk 20-30 ft or hold static" },
+      { id:"r6",  name:"Sledgehammer Deadlift Hold",      sets:"2 \u00d7 20 sec",  load:"Sledge",   cue:"Grip butt end, hinge to 45\u00b0, head hovering \u2014 breathe" },
+      { id:"r7",  name:"World's Greatest Stretch",        sets:"30 sec/side", load:"BW",       cue:"Reach tall at top" },
+      { id:"r8",  name:"Standing Couch Stretch",          sets:"30 sec/side", load:"BW",       cue:"Tuck pelvis, squeeze glute" },
+      { id:"r9",  name:"90/90 Hip Switches",              sets:"60 sec",      load:"BW",       cue:"Pure mobility \u2014 let hips sink" },
+      { id:"r10", name:"Tactical Frog",                   sets:"60 sec",      load:"BW",       cue:"Breathe into the stretch" },
+      { id:"r11", name:"Thoracic Extension",              sets:"60 sec",      load:"BW",       cue:"Foam roller or bench edge" },
+      { id:"r12", name:"Box Breathing",                   sets:"3 min",       load:"\u2014",   cue:"4 sec in / 4 hold / 4 out / 4 hold" }
+    ],
+    cooldown: {
+      label: "COOL-DOWN \u2014 RECOVERY STRETCH", tag: "~8 min \u2022 Gentle \u2014 you are already coming off shift",
+      exercises: [
+        { name:"Supine Knee-to-Chest", hold:"45 sec/side", cue:"Pull knee gently \u2014 decompress the lower back" },
+        { name:"Supine Figure-4 Piriformis", hold:"60 sec/side", cue:"Cross ankle over knee, flex foot \u2014 feel the glute and hip" },
+        { name:"Child's Pose", hold:"60 sec", cue:"Arms extended, breathe into the lower back \u2014 full release" },
+        { name:"Supine Spinal Twist", hold:"45 sec/side", cue:"Knee drops across, arms open \u2014 let gravity do the work" },
+        { name:"Legs Up the Wall", hold:"2 min", cue:"Feet up, arms relaxed \u2014 nervous system reset, drain the legs" }
+      ]
+    }
+  },
+  fpWarmup: {
+    label: "FP-INSPIRED WARM-UP", tag: "~8 min \u2022 Before Day 1, 2, or 3 \u2022 Gait-pattern activation",
+    how: "Flow through each movement in sequence. No rest between. One continuous pass. Wake up the rotational chain before loading it.",
+    exercises: [
+      { id:"fp1", name:"Standing Thoracic Rotations",  sets:"10/side",  load:"BW", cue:"Hands at temples, rotate fully \u2014 let eyes lead the turn" },
+      { id:"fp2", name:"Cross-Body Reach & Step",      sets:"10/side",  load:"BW", cue:"Step forward, reach opposite arm across \u2014 link hips and shoulders" },
+      { id:"fp3", name:"Gait March (High Knee + Arm)", sets:"20 steps", load:"BW", cue:"Exaggerate arm swing opposite to knee \u2014 wake up the rotational chain" },
+      { id:"fp4", name:"Hip Circle + Reach",           sets:"8/side",   load:"BW", cue:"One leg on step, circle hip open, reach overhead opposite arm" },
+      { id:"fp5", name:"Standing 90/90 Rotation",      sets:"10/side",  load:"BW", cue:"Feet wide, shift weight to one leg, rotate torso over that hip" },
+      { id:"fp6", name:"Lateral Lunge + Cross Reach",  sets:"8/side",   load:"BW", cue:"Lunge laterally, reach both hands to outside of lunging foot" },
+      { id:"fp7", name:"Single-Leg Hip Hinge + Reach", sets:"8/leg",    load:"BW", cue:"Stand on one leg, hinge forward, extend opposite arm and leg" }
+    ],
+    cooldown: {
+      label: "COOL-DOWN \u2014 POST WARMUP", tag: "~5 min \u2022 Only if used standalone",
+      exercises: [
+        { name:"Thoracic Rotation Hold", hold:"30 sec/side", cue:"Rotate fully, hold at end range \u2014 breathe into the rotation" },
+        { name:"90/90 Hip Hold", hold:"60 sec/side", cue:"Sit in 90/90, upright spine \u2014 let hips sink" },
+        { name:"Lateral Line Stretch", hold:"45 sec/side", cue:"Arm overhead, lean away \u2014 stretch the whole side of the body" }
+      ]
+    }
+  },
+  day1: {
+    label: "DAY 1 \u2014 FUNCTIONAL STRENGTH", tag: "~22-25 min \u2022 Rest 45-60 sec between sets",
+    how: "Straight sets \u2014 complete all sets of one exercise before moving to the next. 45-60 sec rest between sets. Not a circuit. Quality reps with controlled tempo.",
+    exercises: [
+      { id:"d1a", name:"DB Deadlift",               sets:"3 \u00d7 8",       load:"60 lb DBs",  cue:"Hip hinge \u2014 3-4 sec lowering" },
+      { id:"d1b", name:"Single-Arm DB Row",          sets:"3 \u00d7 10/side", load:"60 lb DB",   cue:"3-sec controlled lowering" },
+      { id:"d1c", name:"Goblet Box Squat",           sets:"3 \u00d7 12",      load:"30 lb KB",   cue:"Sit back to bench \u2014 pain-free depth only" },
+      { id:"d1d", name:"Banded Push-Ups",            sets:"3 \u00d7 15",      load:"Red Band",   cue:"Full lockout at top" },
+      { id:"d1e", name:"Farmer / Suitcase Carry",    sets:"3 \u00d7 40 ft",   load:"60 lb DB",   cue:"Alternate each week \u2014 suitcase: one DB, brace hard" },
+      { id:"d1f", name:"Half-Kneeling Pallof Press", sets:"2 \u00d7 10/side", load:"Red Band",   cue:"No rotation \u2014 hold 2 sec at extension" },
+      { id:"d1g", name:"Dead Hang",                  sets:"2 \u00d7 30 sec",  load:"BW",         cue:"Spine decompression \u2014 full relax, breathe" },
+      { id:"d1h", name:"Tibialis Raises",            sets:"2 \u00d7 20",      load:"BW",         cue:"2-sec hold at top \u2014 shin health" }
+    ],
+    cooldown: {
+      label: "COOL-DOWN \u2014 DAY 1", tag: "~8-10 min \u2022 Posterior chain, shoulders, grip",
+      exercises: [
+        { name:"Doorway Chest Stretch", hold:"45 sec/side", cue:"Arm at 90\u00b0, lean forward \u2014 counter the rowing and pressing" },
+        { name:"Standing Hamstring (foot elevated)", hold:"45 sec/side", cue:"Foot on bench, soft knee, hinge forward \u2014 feel hamstring, not back" },
+        { name:"Lat Stretch (arm on wall)", hold:"45 sec/side", cue:"Arm up on wall, push hips away \u2014 full lat and shoulder stretch" },
+        { name:"Hip Flexor Lunge Stretch", hold:"60 sec/side", cue:"Rear knee down, tuck pelvis, squeeze rear glute \u2014 counters the deadlifts" },
+        { name:"Wrist Flexor Stretch", hold:"30 sec/side", cue:"Arm extended, fingers back, gentle pressure \u2014 grip and forearm recovery" },
+        { name:"Thoracic Rotation in 90/90", hold:"45 sec/side", cue:"Sit in 90/90, rotate open \u2014 unwind after carries and rows" },
+        { name:"Child's Pose", hold:"60 sec", cue:"Arms extended \u2014 spinal decompression after deadlifts and carries" }
+      ]
+    }
+  },
+  day2: {
+    label: "DAY 2 \u2014 MOBILITY & STABILITY", tag: "~22-25 min \u2022 Active recovery \u2014 not a grind",
+    how: "Straight sets \u2014 all sets of one exercise before moving on. Rest flexibly. Focus is control and range of motion, not load or speed.",
+    exercises: [
+      { id:"d2a", name:"KB Swings",              sets:"2 \u00d7 15",         load:"35 lb KB",    cue:"Explosive hip hinge \u2014 warm-up pace" },
+      { id:"d2b", name:"90/90 Hip Switches",     sets:"2 min total",     load:"BW",           cue:"Controlled transitions both sides" },
+      { id:"d2c", name:"Banded TKEs",            sets:"2 \u00d7 20/leg",    load:"Black Band",  cue:"Quad activation \u2014 slow and controlled" },
+      { id:"d2d", name:"Glute Bridge Hold",      sets:"2 \u00d7 30 sec",    load:"BW",           cue:"Drive hips up, squeeze glutes" },
+      { id:"d2e", name:"Copenhagen Plank",       sets:"2 \u00d7 20 sec/side",load:"BW",          cue:"Groin and hip stability \u2014 squeeze hard" },
+      { id:"d2f", name:"Dead Bug",               sets:"2 \u00d7 8/side",    load:"BW",           cue:"Opposite arm and leg extend slow \u2014 low back glued to floor" },
+      { id:"d2g", name:"Single-Leg KB Pass",     sets:"2 \u00d7 20 sec/side",load:"25 lb KB",   cue:"Stand on one leg, pass KB hand to hand slowly" },
+      { id:"d2h", name:"Band External Rotation", sets:"2 \u00d7 15/side",   load:"Light Band",  cue:"Elbow pinned to side \u2014 rotate outward slow" },
+      { id:"d2i", name:"Front Plank",            sets:"2 \u00d7 45 sec",    load:"BW",           cue:"Brace abs, glutes, breathe steadily" },
+      { id:"d2j", name:"Side Plank",             sets:"2 \u00d7 30 sec/side",load:"BW",          cue:"Oblique endurance \u2014 stack feet" },
+      { id:"d2k", name:"4-Way Neck Isometrics",  sets:"1 round",         load:"BW",           cue:"10 sec each: front / back / left / right" }
+    ],
+    cooldown: {
+      label: "COOL-DOWN \u2014 DAY 2", tag: "~8-10 min \u2022 Extend the mobility work you just did",
+      exercises: [
+        { name:"Supine Figure-4 Piriformis", hold:"60 sec/side", cue:"Cross ankle over knee, flex foot \u2014 deep glute and hip release" },
+        { name:"Couch Stretch", hold:"60 sec/side", cue:"Rear foot on wall, tuck pelvis \u2014 deep hip flexor, earn the range" },
+        { name:"Supine Spinal Twist", hold:"45 sec/side", cue:"Knee drops across, arms open \u2014 unwind the spine" },
+        { name:"Adductor Stretch (wide seated)", hold:"60 sec", cue:"Legs wide, walk hands forward \u2014 inner thigh and groin release" },
+        { name:"Doorway Pec Stretch", hold:"45 sec/side", cue:"Counter the planks and external rotation work" },
+        { name:"Neck Rotation Hold", hold:"20 sec/side", cue:"Chin to shoulder, hold \u2014 after neck isometrics this completes the cycle" }
+      ]
+    }
+  },
+  day3: {
+    label: "DAY 3 \u2014 ENDURANCE & WORK CAPACITY", tag: "~20 min \u2022 Circuit \u2022 Minimal rest between exercises",
+    how: "CIRCUIT \u2014 move exercise to exercise with only transition time (15-20 sec). Complete the full circuit, rest 60-90 sec, repeat. If form breaks, take an extra 20-30 sec. Woodchop and KB Swings are your finishers.",
+    exercises: [
+      { id:"d3a", name:"DB Thrusters",        sets:"3 \u00d7 20",         load:"15 lb DBs",  cue:"Squat to overhead press \u2014 one fluid movement" },
+      { id:"d3b", name:"Banded Face Pulls",    sets:"3 \u00d7 20",         load:"Red Band",   cue:"Pull to nose height \u2014 external rotation at end" },
+      { id:"d3c", name:"DB Rows (High Rep)",   sets:"3 \u00d7 15",         load:"30 lb DB",   cue:"Controlled lowering \u2014 no swing" },
+      { id:"d3d", name:"DB Woodchop",          sets:"3 \u00d7 1 min/side", load:"25 lb DB",   cue:"Rotate from hip, high to low \u2014 drive with hips, decel and control descent" },
+      { id:"d3e", name:"Loaded Step-Up",       sets:"3 \u00d7 10/side",    load:"20 lb DBs",  cue:"Step fully, drive through heel \u2014 knee height box" },
+      { id:"d3f", name:"KB Swings (Finisher)", sets:"3 \u00d7 20 reps\n30/15 intervals", load:"35 lb KB", cue:"Explosive hip snap \u2014 30 sec on, 15 sec off. Engine finisher" }
+    ],
+    cooldown: {
+      label: "COOL-DOWN \u2014 DAY 3", tag: "~8-10 min \u2022 Legs, hips, shoulders after the circuit",
+      exercises: [
+        { name:"Standing Quad Stretch", hold:"45 sec/side", cue:"Hold ankle, stand tall \u2014 after thrusters and step-ups the quads need this" },
+        { name:"Hip Flexor Lunge Stretch", hold:"60 sec/side", cue:"Rear knee down, tuck pelvis \u2014 step-ups and thrusters load the hip flexors hard" },
+        { name:"Seated Hamstring Stretch", hold:"60 sec/side", cue:"One leg extended, reach toward foot \u2014 keep spine long" },
+        { name:"Doorway Chest Stretch", hold:"45 sec/side", cue:"Counter the pressing and rowing from the circuit" },
+        { name:"Thoracic Extension over Bench", hold:"60 sec", cue:"Arms crossed or overhead \u2014 open up after the rowing and swings" },
+        { name:"Calf Stretch (wall)", hold:"45 sec/side", cue:"Straight leg then bent knee \u2014 both heads of the calf after step-ups" },
+        { name:"Child's Pose", hold:"60 sec", cue:"Final decompression \u2014 breathe out, complete the session" }
+      ]
+    }
+  },
+  day4a: {
+    label: "DAY 4A \u2014 KB & SLEDGE FLOW + CORE FINISHER", tag: "~26-28 min \u2022 Restorative base + Archer Rows + Bottoms-Up Press + 4-min Core Finisher",
+    how: "Straight sets \u2014 all sets of one exercise before moving on. Restorative pace for the main block. Archer Rows: plank position, slow and controlled, zero hip rotation. Bottoms-Up Press: keep the bell from flopping \u2014 this is shoulder armour not a strength test. Finish with 4-min Core Finisher: alternate Pull-Throughs (rounds 1+3) and Kayaks (rounds 2+4), 45 sec on / 15 sec off.",
+    exercises: [
+      { id:"d4a1", name:"KB Halos",                       sets:"10+10",          load:"15 lb KB", cue:"Slow full circle CW then CCW \u2014 warm up spine and shoulders" },
+      { id:"d4a2", name:"KB Archer Rows",                 sets:"2 \u00d7 8/side", load:"35 lb KB", cue:"Plank position, one hand on KB. Pull to hip while supporting arm stays locked straight. Brace hard before each rep \u2014 zero hip rotation. 2-sec hold at top, slow lower." },
+      { id:"d4a3", name:"Single-Leg KB RDL",               sets:"2 \u00d7 8/leg",  load:"25 lb KB", cue:"Hip hinge only \u2014 slow descent, find balance first" },
+      { id:"d4a4", name:"Bottoms-Up KB Press",             sets:"2 \u00d7 5/side", load:"25 lb KB", cue:"Hold KB upside down by the handle, press overhead. Keep the bell from flopping \u2014 rotator cuff and core fire constantly. Slow and controlled, not a strength grind." },
+      { id:"d4a5", name:"Sledgehammer 360s",               sets:"2 \u00d7 10 ea",  load:"Sledge",   cue:"Hold near base \u2014 let head swing CW then CCW" },
+      { id:"d4a6", name:"Sledgehammer Overhead Hold/Walk", sets:"2 \u00d7 20 sec", load:"Sledge",   cue:"Walk 20-30 ft OR hold static \u2014 same goal" },
+      { id:"d4a7", name:"Sledgehammer Deadlift Hold",      sets:"2 \u00d7 20 sec", load:"Sledge",   cue:"Grip butt end, hinge to 45\u00b0 \u2014 breathe" },
+      { id:"d4a8", name:"CORE FINISHER \u2014 KB Plank Pull-Throughs", sets:"Rounds 1+3\n45 sec on / 15 sec off", load:"35 lb KB", cue:"Push-up plank, feet wide. Drag KB under body side to side with one hand. Lock hips \u2014 zero tilt. Anterior core under max isometric tension." },
+      { id:"d4a9", name:"CORE FINISHER \u2014 Sledgehammer Kayaks",    sets:"Rounds 2+4\n45 sec on / 15 sec off", load:"Sledge",   cue:"Grip like a kayak paddle, one hand at the very base. Carve a tight figure-8 past each hip. FREEZE the lower body \u2014 obliques do all the braking and twisting." }
+    ],
+    cooldown: {
+      label: "COOL-DOWN \u2014 DAY 4A", tag: "~8 min \u2022 Restorative finish",
+      exercises: [
+        { name:"Supine Knee-to-Chest", hold:"45 sec/side", cue:"Gentle lower back release after RDLs and sledge work" },
+        { name:"Figure-4 Glute Stretch", hold:"60 sec/side", cue:"Cross ankle over knee \u2014 hip and glute after single-leg work" },
+        { name:"Thoracic Rotation in 90/90", hold:"45 sec/side", cue:"Unwind after the sledgehammer rotation work" },
+        { name:"Lat Stretch (arm on wall)", hold:"45 sec/side", cue:"Arm up, push hips away \u2014 after overhead holds and pullovers" },
+        { name:"Legs Up the Wall", hold:"2 min", cue:"Complete recovery reset \u2014 drain the legs, calm the nervous system" }
+      ]
+    }
+  },
+  day4b: {
+    label: "DAY 4B \u2014 SINGLE KB AMQRP", tag: "~20-25 min \u2022 Feel fresh \u2192 choose this \u2022 Target 3-4 quality rounds",
+    how: "AMQRP \u2014 all 6 exercises = 1 round. Rest as needed between movements. Target 3-4 quality rounds in 20-25 min. Quality over speed.",
+    exercises: [
+      { id:"d4b1", name:"H2H Swings",             sets:"10/side", load:"35 lb KB", cue:"Hand-to-hand transfer at top \u2014 explosive hip drive" },
+      { id:"d4b2", name:"Rotational High Pulls",   sets:"5/side",  load:"35 lb KB", cue:"Drive from hip, pull to shoulder height \u2014 rotational power" },
+      { id:"d4b3", name:"Offset Push-Up Toe Taps", sets:"10/side", load:"BW",       cue:"Hand on KB, tap opposite toe at top \u2014 core stability" },
+      { id:"d4b4", name:"Swing Clean + Rev Lunge", sets:"5/side",  load:"35 lb KB", cue:"Master the clean first before adding lunge" },
+      { id:"d4b5", name:"Ballistic Rows",           sets:"10/side", load:"35 lb KB", cue:"Hip-hinged row with a small pull \u2014 lat and grip" },
+      { id:"d4b6", name:"SA Push Press",            sets:"5/side",  load:"35 lb KB", cue:"Drive from legs, lock out overhead \u2014 brace hard" }
+    ],
+    cooldown: {
+      label: "COOL-DOWN \u2014 DAY 4B", tag: "~8-10 min \u2022 Full body after the AMQRP",
+      exercises: [
+        { name:"Doorway Chest Stretch", hold:"45 sec/side", cue:"Counter the push press and push-ups \u2014 open pec and front shoulder" },
+        { name:"Lat Stretch (arm on wall)", hold:"45 sec/side", cue:"After ballistic rows and high pulls the lats need length" },
+        { name:"Hip Flexor Lunge Stretch", hold:"60 sec/side", cue:"Rear knee down, tuck pelvis \u2014 reverse lunges load the hip flexor hard" },
+        { name:"Thoracic Rotation Seated Hold", hold:"45 sec/side", cue:"Unwind the rotation from high pulls and swings" },
+        { name:"Wrist Flexor & Extensor Stretch", hold:"30 sec each/side", cue:"Grip intensive session \u2014 flush the forearms and wrists" },
+        { name:"Child's Pose", hold:"60 sec", cue:"Full decompression \u2014 breathe out, complete the session" }
+      ]
+    }
+  },
+  backyard_a: {
+    label: "BACKYARD A \u2014 KB FLOW & STRENGTH", tag: "~22 min \u2022 Outdoor \u2022 35 lb KB + bands",
+    how: "Straight sets \u2014 all sets of one exercise before moving on. Rest 30-45 sec between sets. Every exercise is a natural pause point \u2014 put the KB down and go if needed.",
+    exercises: [
+      { id:"ba1", name:"KB Halos",                  sets:"2 \u00d7 10+10",   load:"35 lb KB", cue:"Full slow circle CW then CCW \u2014 warm spine and shoulders" },
+      { id:"ba2", name:"KB Deadlift (Single)",       sets:"3 \u00d7 8/side",  load:"35 lb KB", cue:"One KB between feet \u2014 hip hinge, 3-sec lowering" },
+      { id:"ba3", name:"H2H KB Swings",             sets:"3 \u00d7 10/side", load:"35 lb KB", cue:"Hand-to-hand transfer at top \u2014 explosive hip snap" },
+      { id:"ba4", name:"Single-Leg KB RDL",          sets:"2 \u00d7 8/leg",   load:"35 lb KB", cue:"Hip hinge only \u2014 slow descent, find balance first" },
+      { id:"ba5", name:"KB Single-Arm Press",        sets:"3 \u00d7 8/side",  load:"35 lb KB", cue:"Clean to rack, press strict \u2014 brace core, no lean" },
+      { id:"ba6", name:"Banded Pull-Apart",          sets:"3 \u00d7 20",      load:"Red Band", cue:"Arms straight, pull to chest \u2014 squeeze shoulder blades" },
+      { id:"ba7", name:"KB Goblet Squat",            sets:"3 \u00d7 12",      load:"35 lb KB", cue:"Chest up, sit between heels \u2014 pain-free depth only" },
+      { id:"ba8", name:"Half-Kneeling Pallof Press", sets:"2 \u00d7 10/side", load:"Red Band", cue:"Anchor to fence or post \u2014 no rotation, hold 2 sec" },
+      { id:"ba9", name:"Dead Hang",                  sets:"2 \u00d7 30 sec",  load:"BW",       cue:"Full relax \u2014 spinal decompression, breathe slow" }
+    ],
+    cooldown: {
+      label: "COOL-DOWN \u2014 BACKYARD A", tag: "~8 min \u2022 Standing \u2014 stay eyes-up with the kids",
+      exercises: [
+        { name:"Standing Hip Flexor Stretch", hold:"60 sec/side", cue:"Lunge position, tuck pelvis \u2014 after single-leg RDLs and deadlifts" },
+        { name:"Standing Hamstring (foot on step)", hold:"45 sec/side", cue:"Foot elevated, hinge forward \u2014 counter the hinging work" },
+        { name:"Fence Chest Stretch", hold:"45 sec/side", cue:"Arm at 90\u00b0 on fence post, lean forward \u2014 open the chest" },
+        { name:"Lat Stretch on Fence", hold:"45 sec/side", cue:"Arm overhead on fence, push hips away \u2014 after pressing and rows" },
+        { name:"Standing Quad Stretch", hold:"30 sec/side", cue:"Hold ankle, stand tall \u2014 after goblet squats" },
+        { name:"Standing Thoracic Rotation Hold", hold:"30 sec/side", cue:"Hands at temples, rotate and hold \u2014 unwind the session" }
+      ]
+    }
+  },
+  backyard_b: {
+    label: "BACKYARD B \u2014 CONDITIONING & CORE", tag: "~20 min \u2022 Outdoor \u2022 35 lb KB + bands \u2022 Minimal rest",
+    how: "Modified circuit \u2014 move exercise to exercise with 15-20 sec transition. Complete full list as one round, rest 60 sec, repeat. Pause any time if kids need you.",
+    exercises: [
+      { id:"bb1",  name:"KB Swings (2-Hand)",      sets:"2 \u00d7 20",       load:"35 lb KB",   cue:"Hip hinge and snap \u2014 warm-up pace" },
+      { id:"bb2",  name:"Banded Face Pull",         sets:"3 \u00d7 20",       load:"Red Band",   cue:"Anchor at face height \u2014 pull to nose, external rotation at end" },
+      { id:"bb3",  name:"KB Rotational High Pull",  sets:"3 \u00d7 8/side",   load:"35 lb KB",   cue:"Drive from hip, pull to shoulder height" },
+      { id:"bb4",  name:"Banded Squat",             sets:"3 \u00d7 20",       load:"Black Band", cue:"Stand on band held at shoulders \u2014 adjust thickness" },
+      { id:"bb5",  name:"KB Uppercuts",             sets:"3 \u00d7 10/side",  load:"35 lb KB",   cue:"Drive from the hip \u2014 rotational power through core and shoulder" },
+      { id:"bb6",  name:"Banded Glute Bridge",      sets:"3 \u00d7 15",       load:"Black Band", cue:"Band across hips \u2014 drive up, squeeze glutes 2 sec" },
+      { id:"bb7",  name:"KB Single-Arm Row",        sets:"3 \u00d7 12/side",  load:"35 lb KB",   cue:"Hip-hinged, elbow close \u2014 3-sec lowering" },
+      { id:"bb8",  name:"Banded Clamshells",        sets:"2 \u00d7 20/side",  load:"Red Band",   cue:"Side-lying, band above knees \u2014 slow open, do not rock hips" },
+      { id:"bb9",  name:"KB Push Press",            sets:"3 \u00d7 8/side",   load:"35 lb KB",   cue:"Dip and drive from legs \u2014 lock out overhead, brace hard" },
+      { id:"bb10", name:"Pallof Press + Rotation",  sets:"2 \u00d7 8/side",   load:"Red Band",   cue:"Press out, rotate torso away, return \u2014 controlled" }
+    ],
+    cooldown: {
+      label: "COOL-DOWN \u2014 BACKYARD B", tag: "~8 min \u2022 All standing \u2014 eyes-up with the kids",
+      exercises: [
+        { name:"Standing Hip Flexor Stretch", hold:"60 sec/side", cue:"Lunge, tuck pelvis \u2014 after squats, bridges, and clams" },
+        { name:"Standing Figure-4 Balance Stretch", hold:"45 sec/side", cue:"Cross ankle over opposite knee, sit back \u2014 glute release standing" },
+        { name:"Fence Chest Stretch", hold:"45 sec/side", cue:"Counter the push press and rows" },
+        { name:"Standing Calf Stretch (curb or wall)", hold:"45 sec/side", cue:"Straight leg then bent \u2014 flush the legs after squats and bridges" },
+        { name:"Cross-Body Shoulder Stretch", hold:"30 sec/side", cue:"After uppercuts and high pulls \u2014 front shoulder release" },
+        { name:"Standing Thoracic Rotation Hold", hold:"45 sec/side", cue:"Hands at temples, rotate fully and hold \u2014 unwind the rotational work" },
+        { name:"Standing Side Bend Hold", hold:"30 sec/side", cue:"Arm overhead, lean away \u2014 lateral line release" }
+      ]
+    }
+  }
+};
+
+const GROUP_TABS = [
+  { key:"tactical", label:"TACTICAL FF" },
+  { key:"backyard", label:"BACKYARD" },
+  { key:"install",  label:"\u2b07 Install" }
+];
+
+let state = { program: deepClone(DEFAULTS), activeGroup: "tactical", openSections: {} };
+
+
+// ── WEEK TRACKER ─────────────────────────────────────────────────────────────
+let completedWeeks = new Set();
+
+function loadWeeks() {
+  try {
+    const saved = localStorage.getItem("tactical_weeks_v1");
+    if (saved) completedWeeks = new Set(JSON.parse(saved));
+  } catch(e) {}
+}
+
+function saveWeeks() {
+  try { localStorage.setItem("tactical_weeks_v1", JSON.stringify([...completedWeeks])); } catch(e) {}
+}
+
+function toggleWeek(n) {
+  if (completedWeeks.has(n)) {
+    completedWeeks.delete(n);
+  } else {
+    completedWeeks.add(n);
+  }
+  saveWeeks();
+  renderWeeks();
+}
+
+function renderWeeks() {
+  const grid = document.getElementById("weeksGrid");
+  if (!grid) return;
+  const done = completedWeeks.size;
+  const current = Math.min(done + 1, 8);
+  grid.innerHTML = Array.from({length:8}, (_,i) => {
+    const n = i + 1;
+    const isDone = completedWeeks.has(n);
+    const isCurrent = !isDone && n === current;
+    const cls = isDone ? "done" : isCurrent ? "current" : "";
+    const icon = isDone ? "&#10003;" : n;
+    return `<div class="week-cell" onclick="toggleWeek(${n})">
+      <div class="week-circle ${cls}">${icon}</div>
+      <div class="week-num">WK ${n}</div>
+    </div>`;
+  }).join("");
+}
+
+
+// ── WEEK TARGETS ─────────────────────────────────────────────────────────────
+let targetsOpen = false;
+let selectedTargetWeek = 1;
+
+const WEEK_TARGETS = [
+  {
+    week: 1,
+    label: "Week 1 — Find Your Baseline",
+    note: "Do not chase numbers this week. Move well, note how everything feels. These are floor targets — if you hit them easily, that tells you where to push from Week 3.",
+    categories: [
+      { label: "STRENGTH", items: [
+        { name: "DB Deadlift", val: "50 lb DBs × 8", note: "3-4 sec lowering, full hinge" },
+        { name: "Single-Arm DB Row", val: "45 lb × 10/side", note: "Controlled — no swing" },
+        { name: "Goblet Box Squat", val: "25 lb × 12", note: "Pain-free depth only" },
+        { name: "KB Single-Arm Press", val: "25 lb × 8/side", note: "Strict — no lean" },
+        { name: "Farmer Carry", val: "50 lb × 40 ft", note: "Brace hard, tall posture" },
+      ]},
+      { label: "CONDITIONING", items: [
+        { name: "KB Swings (2-hand)", val: "35 lb × 15 unbroken", note: "Hip snap — not arms" },
+        { name: "DB Thrusters", val: "12 lb × 20", note: "Fluid squat-to-press" },
+        { name: "DB Woodchop", val: "20 lb × 45 sec/side", note: "Control the descent" },
+        { name: "Loaded Step-Up", val: "15 lb × 10/side", note: "Drive through heel" },
+      ]},
+      { label: "ENDURANCE", items: [
+        { name: "Dead Hang", val: "2 × 20 sec", note: "Full relax, breathe" },
+        { name: "Front Plank", val: "2 × 35 sec", note: "Brace and breathe" },
+        { name: "Copenhagen Plank", val: "2 × 15 sec/side", note: "Hip stability baseline" },
+      ]}
+    ]
+  },
+  {
+    week: 2,
+    label: "Week 2 — Build the Pattern",
+    note: "Same weights as Week 1 but focus on tempo and breathing. Add 1-2 reps where it felt easy. Do not jump load yet.",
+    categories: [
+      { label: "STRENGTH", items: [
+        { name: "DB Deadlift", val: "50 lb DBs × 8", note: "Nail the tempo — same load, better form" },
+        { name: "Single-Arm DB Row", val: "50 lb × 10/side", note: "+5 lb if Week 1 felt controlled" },
+        { name: "Goblet Box Squat", val: "25 lb × 14", note: "+2 reps, same load" },
+        { name: "KB Single-Arm Press", val: "25 lb × 10/side", note: "+2 reps before adding load" },
+        { name: "Farmer Carry", val: "55 lb × 40 ft", note: "Small load bump" },
+      ]},
+      { label: "CONDITIONING", items: [
+        { name: "KB Swings (2-hand)", val: "35 lb × 20 unbroken", note: "+5 reps" },
+        { name: "DB Thrusters", val: "15 lb × 20", note: "+2-3 lb" },
+        { name: "DB Woodchop", val: "20 lb × 1 min/side", note: "Full minute now" },
+        { name: "Loaded Step-Up", val: "15 lb × 10/side", note: "Solidify the pattern" },
+      ]},
+      { label: "ENDURANCE", items: [
+        { name: "Dead Hang", val: "2 × 25 sec", note: "+5 sec" },
+        { name: "Front Plank", val: "2 × 40 sec", note: "+5 sec" },
+        { name: "Copenhagen Plank", val: "2 × 18 sec/side", note: "+3 sec" },
+      ]}
+    ]
+  },
+  {
+    week: 3,
+    label: "Week 3 — First Load Jump",
+    note: "First real push week. Add load on primary lifts. Conditioning pace should feel challenging but sustainable. Rest fully between sets on Day 1.",
+    categories: [
+      { label: "STRENGTH", items: [
+        { name: "DB Deadlift", val: "55 lb DBs × 8", note: "+5 lb — hinge stays sharp" },
+        { name: "Single-Arm DB Row", val: "55 lb × 10/side", note: "+5 lb" },
+        { name: "Goblet Box Squat", val: "30 lb × 12", note: "Load bump, reset reps" },
+        { name: "KB Single-Arm Press", val: "30 lb × 8/side", note: "+5 lb, strict" },
+        { name: "Suitcase Carry", val: "55 lb × 40 ft", note: "Week B — anti-lateral brace" },
+      ]},
+      { label: "CONDITIONING", items: [
+        { name: "KB Swings (2-hand)", val: "35 lb × 20", note: "Add H2H variation" },
+        { name: "DB Thrusters", val: "15 lb × 20", note: "Solidify at this load" },
+        { name: "DB Woodchop", val: "25 lb × 1 min/side", note: "+5 lb" },
+        { name: "Loaded Step-Up", val: "20 lb × 10/side", note: "+5 lb" },
+      ]},
+      { label: "ENDURANCE", items: [
+        { name: "Dead Hang", val: "2 × 30 sec", note: "Target met — maintain" },
+        { name: "Front Plank", val: "2 × 45 sec", note: "Target met — maintain" },
+        { name: "Copenhagen Plank", val: "2 × 20 sec/side", note: "Good benchmark" },
+      ]}
+    ]
+  },
+  {
+    week: 4,
+    label: "Week 4 — Consolidate",
+    note: "Hold Week 3 loads. Add reps not weight. Let the body adapt. Recovery workout is critical this week — do not skip it.",
+    categories: [
+      { label: "STRENGTH", items: [
+        { name: "DB Deadlift", val: "55 lb DBs × 10", note: "+2 reps, same load" },
+        { name: "Single-Arm DB Row", val: "55 lb × 12/side", note: "+2 reps" },
+        { name: "Goblet Box Squat", val: "30 lb × 14", note: "+2 reps" },
+        { name: "KB Single-Arm Press", val: "30 lb × 10/side", note: "+2 reps" },
+        { name: "Farmer Carry", val: "60 lb × 40 ft", note: "Small bump" },
+      ]},
+      { label: "CONDITIONING", items: [
+        { name: "KB Swings (Finisher)", val: "35 lb × 3 × 20", note: "All 3 rounds clean" },
+        { name: "DB Thrusters", val: "15 lb × 20", note: "Hold — circuit pace drops rest" },
+        { name: "DB Woodchop", val: "25 lb × 1 min/side", note: "Hold load, own the movement" },
+        { name: "Loaded Step-Up", val: "20 lb × 12/side", note: "+2 reps" },
+      ]},
+      { label: "ENDURANCE", items: [
+        { name: "Dead Hang", val: "2 × 35 sec", note: "+5 sec" },
+        { name: "Front Plank", val: "2 × 45 sec", note: "Maintain" },
+        { name: "Side Plank", val: "2 × 35 sec/side", note: "+5 sec" },
+      ]}
+    ]
+  },
+  {
+    week: 5,
+    label: "Week 5 — Second Load Jump",
+    note: "Halfway point. Push load again on primary lifts. By now movement patterns should feel automatic. Trust the reps you have banked.",
+    categories: [
+      { label: "STRENGTH", items: [
+        { name: "DB Deadlift", val: "60 lb DBs × 8", note: "Working toward full load" },
+        { name: "Single-Arm DB Row", val: "60 lb × 10/side", note: "Full load — control the lowering" },
+        { name: "Goblet Box Squat", val: "35 lb × 12", note: "+5 lb" },
+        { name: "KB Single-Arm Press", val: "35 lb × 8/side", note: "+5 lb" },
+        { name: "Suitcase Carry", val: "60 lb × 40 ft", note: "Anti-lateral brace challenged now" },
+      ]},
+      { label: "CONDITIONING", items: [
+        { name: "KB Swings (Finisher)", val: "35 lb × 3 × 20", note: "Rest intervals tightening" },
+        { name: "DB Thrusters", val: "15 lb × 20", note: "Circuit pace — less rest between rounds" },
+        { name: "DB Woodchop", val: "25 lb × 1 min/side", note: "Increase speed of rotation" },
+        { name: "Loaded Step-Up", val: "22 lb × 10/side", note: "Incremental bump" },
+      ]},
+      { label: "ENDURANCE", items: [
+        { name: "Dead Hang", val: "2 × 40 sec", note: "Approaching towel hang territory" },
+        { name: "Front Plank", val: "2 × 50 sec", note: "+5 sec" },
+        { name: "Copenhagen Plank", val: "2 × 25 sec/side", note: "+5 sec" },
+      ]}
+    ]
+  },
+  {
+    week: 6,
+    label: "Week 6 — Peak Push",
+    note: "Hardest week of the program. You are now at your equipment ceiling on several lifts (60 lb DB max) — this week introduces band-stacking and feel-based progression. Sleep and nutrition matter most this week. Do not skip the cool-down.",
+    categories: [
+      { label: "STRENGTH", items: [
+        { name: "DB Deadlift", val: "60 lb DBs + light band × 10", note: "EQUIPMENT CAP — loop band under feet, hold DBs normally. Band adds resistance through the lift. Track by feel vs last clean 60 lb-only set, not exact lb." },
+        { name: "Single-Arm DB Row", val: "60 lb × 12/side", note: "EQUIPMENT CAP — hold here, progress via reps/tempo only from this point forward" },
+        { name: "Goblet Box Squat", val: "35 lb + light band × 14", note: "Stand on band, hold KB at chest — band adds load on the way up" },
+        { name: "KB Single-Arm Press", val: "35 lb × 10/side", note: "+2 reps strict" },
+        { name: "Farmer Carry", val: "60 lb × 50 ft", note: "EQUIPMENT CAP — extend distance instead of load from here" },
+      ]},
+      { label: "CONDITIONING", items: [
+        { name: "KB Swings (Finisher)", val: "35 lb × 3 × 20", note: "30/15 sharp — no sloppy reps" },
+        { name: "DB Thrusters", val: "17 lb × 20", note: "Small bump — circuit pace" },
+        { name: "DB Woodchop", val: "30 lb × 1 min/side", note: "+5 lb" },
+        { name: "Loaded Step-Up", val: "25 lb × 10/side", note: "Target load" },
+      ]},
+      { label: "ENDURANCE", items: [
+        { name: "Dead Hang", val: "2 × 45 sec", note: "Or begin towel hang progression" },
+        { name: "Front Plank", val: "2 × 55 sec", note: "Almost a minute" },
+        { name: "Side Plank", val: "2 × 40 sec/side", note: "Solid oblique endurance" },
+      ]}
+    ]
+  },
+  {
+    week: 7,
+    label: "Week 7 — Consolidate & Refine",
+    note: "Back off volume slightly. Several lifts are now feel-based since you've hit equipment max. Focus on movement quality and recovery. Body is adapting — let it.",
+    categories: [
+      { label: "STRENGTH", items: [
+        { name: "DB Deadlift", val: "60 lb + light-med band × 8", note: "FEEL-BASED — should feel like old 65-70 lb effort. 2 sets, quality over volume" },
+        { name: "Single-Arm DB Row", val: "60 lb × 10/side", note: "EQUIPMENT CAP — 2 sets, slow eccentric is your progression now" },
+        { name: "Goblet Box Squat", val: "35 lb + light-med band × 12", note: "FEEL-BASED — earn full depth with the added band resistance" },
+        { name: "KB Single-Arm Press", val: "35 lb × 8/side", note: "Strict — no leg drive" },
+        { name: "Farmer Carry", val: "60 lb × 50 ft", note: "EQUIPMENT CAP — maintain distance, focus on brace quality" },
+      ]},
+      { label: "CONDITIONING", items: [
+        { name: "KB Swings (Finisher)", val: "35 lb × 3 × 20", note: "Smooth — not survival mode" },
+        { name: "DB Thrusters", val: "17 lb × 20", note: "Hold load" },
+        { name: "DB Woodchop", val: "30 lb × 1 min/side", note: "Own the movement" },
+        { name: "Loaded Step-Up", val: "25 lb × 10/side", note: "Add stair walk if knees allow" },
+      ]},
+      { label: "ENDURANCE", items: [
+        { name: "Dead Hang", val: "2 × 45 sec", note: "Maintain or try towel hang" },
+        { name: "Front Plank", val: "2 × 55 sec", note: "Hold" },
+        { name: "Copenhagen Plank", val: "2 × 28 sec/side", note: "Near 30 sec target" },
+      ]}
+    ]
+  },
+  {
+    week: 8,
+    label: "Week 8 — Test & Complete",
+    note: "Final week. Test your best on key lifts and holds. Where you hit equipment max, test the band-stacked version. These become your new baseline for the next program cycle. Record everything — including which band you used.",
+    categories: [
+      { label: "STRENGTH TARGETS", items: [
+        { name: "DB Deadlift", val: "60 lb + medium band × 10 ✓", note: "TEST DAY — heaviest band-stack you can hold form on. Note the band colour/resistance used for next cycle" },
+        { name: "Single-Arm DB Row", val: "60 lb × 14/side ✓", note: "EQUIPMENT CAP MET — rep PR is your real number now (started at 10/side Week 1)" },
+        { name: "Goblet Box Squat", val: "35 lb + medium band × 14 ✓", note: "TEST DAY — pain-free, full reset, heaviest band you can control" },
+        { name: "KB Single-Arm Press", val: "35 lb × 10/side ✓", note: "Strict, no lean" },
+        { name: "Farmer Carry", val: "60 lb × 60 ft ✓", note: "EQUIPMENT CAP MET — distance is your real number now" },
+      ]},
+      { label: "CONDITIONING TARGETS", items: [
+        { name: "KB Swings (Finisher)", val: "35 lb × 3 × 20 clean ✓", note: "All reps explosive, 30/15 tight" },
+        { name: "DB Thrusters", val: "17 lb × 20 in circuit ✓", note: "Fluid — one movement" },
+        { name: "DB Woodchop", val: "30 lb × 1 min/side ✓", note: "Controlled rotation" },
+        { name: "Loaded Step-Up", val: "25 lb × 10/side ✓", note: "Drive through heel" },
+      ]},
+      { label: "ENDURANCE TARGETS", items: [
+        { name: "Dead Hang", val: "2 × 45 sec ✓", note: "Or towel hang 2 × 20 sec" },
+        { name: "Front Plank", val: "2 × 60 sec ✓", note: "Full minute" },
+        { name: "Side Plank", val: "2 × 45 sec/side ✓", note: "Solid oblique endurance" },
+        { name: "Copenhagen Plank", val: "2 × 30 sec/side ✓", note: "Hip durability achieved" },
+      ]}
+    ]
+  }
+];
+
+function renderTargets() {
+  const panel = document.getElementById("targetsPanel");
+  if (!panel) return;
+  const wk = WEEK_TARGETS[selectedTargetWeek - 1];
+  const weekBtns = WEEK_TARGETS.map((w,i) => {
+    const n = i + 1;
+    const isDone = completedWeeks.has(n);
+    const isActive = n === selectedTargetWeek;
+    const cls = isActive ? "active" : isDone ? "done-wk" : "inactive";
+    return `<button class="wk-btn ${cls}" onclick="selectTargetWeek(${n})">W${n}</button>`;
+  }).join("");
+
+  panel.innerHTML = `
+    <div class="week-select-row">${weekBtns}</div>
+    <div class="target-week-label">${wk.label}</div>
+    <div class="target-week-note">${wk.note}</div>
+    ${wk.categories.map(cat => `
+      <div class="target-category">
+        <div class="target-cat-label">${cat.label}</div>
+        ${cat.items.map(item => `
+          <div class="target-row">
+            <div>
+              <div class="target-name">${item.name}</div>
+              <div class="target-note">${item.note}</div>
+            </div>
+            <div class="target-val">${item.val}</div>
+          </div>`).join("")}
+      </div>`).join("")}`;
+}
+
+function selectTargetWeek(n) {
+  selectedTargetWeek = n;
+  renderTargets();
+}
+
+let targetsExpanded = false;
+function toggleTargets() {
+  targetsExpanded = !targetsExpanded;
+  document.getElementById("targetsPanel").style.display = targetsExpanded ? "block" : "none";
+  document.getElementById("targetsArrow").className = "section-arrow" + (targetsExpanded ? " open" : "");
+}
+function deepClone(o) { return JSON.parse(JSON.stringify(o)); }
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem("tactical_ff_v2");
+    if (saved) { const p = JSON.parse(saved); if (p.program) state.program = p.program; }
+  } catch(e) {}
+}
+
+function saveState() {
+  try {
+    localStorage.setItem("tactical_ff_v2", JSON.stringify({ program: state.program }));
+    showToast("Saved \u2713");
+    const b = document.getElementById("saveBadge");
+    if (b) b.textContent = "Saved " + new Date().toLocaleTimeString();
+  } catch(e) {}
+}
+
+function resetToDefaults() {
+  if (confirm("Reset all weights and sets to defaults?")) {
+    state.program = deepClone(DEFAULTS);
+    saveState();
+    render();
+  }
+}
+
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 1800);
+}
+
+function startEdit(el, sectionKey, exId, field) {
+  const current = el.textContent.trim();
+  const input = document.createElement("input");
+  input.className = "edit-input";
+  input.value = current;
+  el.replaceWith(input);
+  input.focus();
+  input.select();
+  function commit() {
+    const val = input.value.trim() || current;
+    const sec = state.program[sectionKey];
+    const ex = sec.exercises.find(e => e.id === exId);
+    if (ex) ex[field] = val;
+    saveState();
+    const span = document.createElement("span");
+    span.className = el.className;
+    span.textContent = val;
+    span.onclick = () => startEdit(span, sectionKey, exId, field);
+    input.replaceWith(span);
+  }
+  input.addEventListener("blur", commit);
+  input.addEventListener("keydown", e => {
+    if (e.key === "Enter") { e.preventDefault(); input.blur(); }
+    if (e.key === "Escape") { input.value = current; input.blur(); }
+  });
+}
+
+function renderTabs() {
+  document.getElementById("tabBar").innerHTML = GROUP_TABS.map(g =>
+    `<button class="tab ${state.activeGroup===g.key?'active':'inactive'}" onclick="switchGroup('${g.key}')">${g.label}</button>`
+  ).join("");
+}
+
+function switchGroup(key) {
+  state.activeGroup = key;
+  renderTabs();
+  renderContent();
+}
+
+function toggleSection(key) {
+  state.openSections[key] = !state.openSections[key];
+  renderContent();
+}
+
+function renderCooldown(cd) {
+  if (!cd) return "";
+  return `
+    <div class="cd-header">
+      <div class="cd-label">${cd.label}</div>
+      <div class="cd-tag">${cd.tag}</div>
+    </div>
+    <div style="overflow-x:auto">
+    <table class="ex-table cd-table">
+      <thead><tr>
+        <th>STRETCH</th><th>HOLD</th><th class="col-cue">CUE</th>
+      </tr></thead>
+      <tbody>
+        ${cd.exercises.map(ex => `
+          <tr>
+            <td class="ex-name" style="color:#E0E0E0">${ex.name}</td>
+            <td class="cd-hold">${ex.hold}</td>
+            <td class="ex-cue col-cue">${ex.cue}</td>
+          </tr>`).join("")}
+      </tbody>
+    </table>
+    </div>`;
+}
+
+function renderSection(key) {
+  const data = state.program[key];
+  if (!data) return "";
+  const open = !!state.openSections[key];
+  return `
+    <div class="section">
+      <div class="section-header" onclick="toggleSection('${key}')">
+        <div>
+          <div class="section-label">${data.label}</div>
+          <div class="section-tag">${data.tag}</div>
+        </div>
+        <span class="section-arrow ${open?'open':''}">&#9660;</span>
+      </div>
+      ${open ? `<div class="section-body">
+        <div class="how-block"><strong>HOW TO RUN: </strong>${data.how}</div>
+        <div style="overflow-x:auto">
+        <table class="ex-table">
+          <thead><tr><th>EXERCISE</th><th>SETS &times; REPS</th><th>LOAD</th><th class="col-cue">CUE</th></tr></thead>
+          <tbody>
+            ${data.exercises.map(ex => `
+              <tr>
+                <td class="ex-name">${ex.name}</td>
+                <td><span class="editable ex-sets" onclick="startEdit(this,'${key}','${ex.id}','sets')">${ex.sets}</span></td>
+                <td><span class="editable ex-load" onclick="startEdit(this,'${key}','${ex.id}','load')">${ex.load}</span></td>
+                <td class="ex-cue col-cue">${ex.cue}</td>
+              </tr>`).join("")}
+          </tbody>
+        </table>
+        </div>
+        ${renderCooldown(data.cooldown)}
+      </div>` : ""}
+    </div>`;
+}
+
+function renderInstall() {
+  return `<div class="sections">
+    <div class="install-banner">
+      <h3>&#128241; Install on Samsung (Android)</h3>
+      <p>Open this file in Chrome, then:</p>
+      <ol class="install-steps">
+        <li>Tap the <span>three dots menu</span> (top right)</li>
+        <li>Tap <span>Add to Home screen</span> or <span>Install app</span></li>
+        <li>Tap <span>Add</span></li>
+        <li>Opens fullscreen from your home screen like an app</li>
+      </ol>
+    </div>
+    <div class="install-banner">
+      <h3>&#128190; Your changes save automatically</h3>
+      <p>Every edit saves instantly to your phone. Close and reopen \u2014 your weights are still there.</p>
+      <br/>
+      <button onclick="resetToDefaults()" style="background:#3A3A3C;color:#F2F2F7;border:none;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">Reset to defaults</button>
+    </div>
+    <div class="install-banner">
+      <h3>&#127760; Host on Netlify (optional permanent URL)</h3>
+      <ol class="install-steps">
+        <li>Go to <span>netlify.com/drop</span> on your computer</li>
+        <li>Drag the HTML file onto the page</li>
+        <li>Get a free permanent URL in seconds</li>
+        <li>Open in Chrome on Samsung \u2192 Add to Home Screen</li>
+      </ol>
+    </div>
+    <div class="footer">Built for Firefighters \u2022 Strength with Longevity \u2022 Shift-Proof Training</div>
+  </div>`;
+}
+
+function renderContent() {
+  const content = document.getElementById("appContent");
+  if (state.activeGroup === "install") { content.innerHTML = renderInstall(); return; }
+  const keys = state.activeGroup === "tactical"
+    ? ["onShift","recovery","fpWarmup","day1","day2","day3","day4a","day4b"]
+    : ["backyard_a","backyard_b"];
+  const anyOpen = keys.some(k => state.openSections[k]);
+  if (!anyOpen) state.openSections[keys[0]] = true;
+  const banner = state.activeGroup === "backyard" ? `
+    <div class="info-banner"><strong>BACKYARD TACTICAL</strong>
+    Use Day A or Day B when outside with the kids. Replaces your Tactical Firefighter session for that day. Alternate A \u2192 B \u2192 A \u2192 B.</div>` : "";
+  content.innerHTML = `<div class="sections">${banner}${keys.map(renderSection).join("")}
+    <div class="footer">Built for Firefighters \u2022 Strength with Longevity \u2022 Shift-Proof Training</div>
+  </div>`;
+}
+
+function render() { renderTabs(); renderContent(); }
+
+loadWeeks();
+renderWeeks();
+renderTargets();
+loadState();
+state.openSections["day1"] = true;
+render();
+</script>
+</body>
+</html>
